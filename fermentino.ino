@@ -57,7 +57,7 @@ LiquidCrystal lcd(RS, E, D4, D5, D6, D7);
 #define upbuttonPin 10
 #define okbuttonPin 9
 #define downbuttonPin 8
-#define heatingPin 13
+#define heatingPin 6
 #define DELAY 10
 
 #define UP 1
