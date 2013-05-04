@@ -58,6 +58,9 @@ LiquidCrystal lcd(RS, E, D4, D5, D6, D7);
 #define okbuttonPin 9
 #define downbuttonPin 8
 #define heatingPin 6
+#define piezoPin 13
+#define toneDuration 500
+#define tonePause 800
 #define DELAY 10
 
 #define UP 1
@@ -153,6 +156,7 @@ int programTemperatureLOW [10] [3] =  {
 int programSelected = 999; //start with program 999 stby
 
 void setup(){
+  noTone(piezoPin);
   pinMode(upbuttonPin, INPUT);
   pinMode(downbuttonPin, INPUT);
   pinMode(okbuttonPin, INPUT);
@@ -250,6 +254,7 @@ void workProgram(int programSelected){
   }
 
   //return to Standby
+  playSound();
   targetTemperature=minTemperature;
   timerStatus = LOW;
 }
@@ -508,6 +513,17 @@ void processSyncMessage() {
     }  
   }
 }
+
+void playSound(){
+  int tones[] = {523, 659, 587, 698, 659, 784, 698, 880};
+  int elements = sizeof(tones) / sizeof(tones[0]);
+  
+  for(int i = 0; i < elements; i++) {
+    tone(piezoPin, tones[i], toneDuration);
+    delay(tonePause);
+  }
+}
+
 
 
 
