@@ -59,7 +59,10 @@ s.listen(5)  # Create a backlog queue for up to 5 connections
 s.settimeout(float(config['serialCheckInterval']))
 
 ser.flush()
-time.sleep(1)
+#set Arduino time
+ser.write("ST%10.0f" % time.time())
+print "Time sync message: ST%10.0f" % time.time()
+time.sleep(3)
 
 prevDataTime = 0.0  # keep track of time between new data requests
 prevTimeOut = time.time()
@@ -118,7 +121,7 @@ while(run):
 			
 						print line[0:]
 						splitline = line[1:].split(',')
-						sql = "INSERT INTO `fermentino`.`fm_TempProtocol` (`tp_TimeStamp`, `tp_ArduinoTimestamp`, `tp_TargetTemp`, `tp_MeasuredTemp`, `tp_HeatingStatus`, `tp_CoolerStatus`, `tp_RunningProgram_ID`) VALUES (CURRENT_TIMESTAMP, '" + splitline[0] + "', '" + splitline[2] + "', '" + splitline[1] + "', '" + splitline[3] + "', '0', '" + splitline[4] + "');"
+						sql = "INSERT INTO `fermentino`.`fm_TempProtocol` (`tp_TimeStamp`, `tp_ArduinoTimestamp`, `tp_TargetTemp`, `tp_MeasuredTemp`, `tp_HeatingStatus`, `tp_CoolerStatus`, `tp_RunningProgram_ID`) VALUES (CURRENT_TIMESTAMP, FROM_UNIXTIME(" + splitline[0] + "), '" + splitline[2] + "', '" + splitline[1] + "', '" + splitline[3] + "', '0', '" + splitline[4] + "');"
 						cur = con.cursor()
 						cur.execute(sql)
 						con.commit()

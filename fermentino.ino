@@ -59,8 +59,8 @@ LiquidCrystal lcd(RS, E, D4, D5, D6, D7);
 #define downbuttonPin 8
 #define heatingPin 6
 #define piezoPin 13
-#define toneDuration 500
-#define tonePause 800
+#define toneDuration 400
+#define tonePause 600
 #define DELAY 10
 
 #define UP 1
@@ -250,6 +250,7 @@ void workProgram(int programSelected){
 
     } 
     while (targetTime>now());
+    playSound();
 
   }
 
@@ -349,7 +350,7 @@ void updateDisplay(int intresultTemp, int targetTemperature, int heatingStatus, 
 #else
   lcd.write(0xD0 + 15);
 #endif
-  lcd.print("C");
+  lcd.print("C   ");
 
   lcd.setCursor(15, 0);
   if (heatingStatus==HIGH)
@@ -414,7 +415,8 @@ void selectProgram(){
 
   do
   {
-    delay(250);
+    delay(200);
+    checkSerial();
     buttonPressed = checkButtons();
 
     switch (buttonPressed) {
@@ -422,14 +424,14 @@ void selectProgram(){
       if (programSelected < maxPrograms){
         programSelected++;
         lcd.setCursor(0,1);
-        lcd.print(programName [programSelected]);
+        lcd.print(programName [programSelected] + "     ");
       }
       break;
     case DOWN:
       if (programSelected>0){
         programSelected--;
         lcd.setCursor(0,1);
-        lcd.print(programName [programSelected]);
+        lcd.print(programName [programSelected] + "     ");
       }
       break;
     case NULL:
@@ -467,28 +469,25 @@ void checkSerial(){
        Serial.print(",");
        Serial.print(heatingStatus);
        Serial.print(",");
-       Serial.print(programSelected + "\n");
+       Serial.print((String) programSelected + "\n");
        break;
      case 'S':
-       Serial.println("TSREADY");
-       delay(10000);
        processSyncMessage();
-       Serial.print("time synced to ");
-       Serial.print(day());
-       Serial.print(".");
-       Serial.print(month());
-       Serial.print(".");
-       Serial.print(year());
-       Serial.print(" ");
-       Serial.print(hour());
-       Serial.print(":");
-       Serial.print(minute());
-       Serial.print(":"); 
-       Serial.print(second());
-       Serial.print("  "); 
-       Serial.println(now());
-       Serial.print("  "); 
-       //Serial.println(Value);
+       lcd.clear();
+       lcd.print("Time set to:");
+       lcd.setCursor(0,1);
+       if (hour(now())<10)
+          lcd.print("0");
+       lcd.print(hour(now()));
+       lcd.print(":");
+       if (minute(now())<10)
+         lcd.print("0");
+       lcd.print(minute(now()));
+       lcd.print(":");
+       if (second(now())<10)
+         lcd.print("0");
+       lcd.print(second(now()));
+       delay(3000); 
        break;
      case 'p':
        if (serialProtocoll)
@@ -505,7 +504,7 @@ void processSyncMessage() {
   // if time sync available from serial port, update time and return true
   while(Serial.available() >=  TIME_MSG_LEN ){  // time message consists of header & 10 ASCII digits
     char c = Serial.read() ; 
-    Serial.print(c);  
+    //Serial.print(c);  
     if( c == TIME_HEADER ) {       
       time_t pctime = 0;
       for(int i=0; i < TIME_MSG_LEN -1; i++){   
@@ -526,6 +525,7 @@ void playSound(){
   for(int i = 0; i < elements; i++) {
     tone(piezoPin, tones[i], toneDuration);
     delay(tonePause);
+    checkSerial();
   }
 }
 
