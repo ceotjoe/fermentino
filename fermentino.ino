@@ -448,50 +448,55 @@ void checkSerial(){
 
   while (Serial.available()>0) {
 
-    int Command = Serial.parseInt();
-    int Value = Serial.parseFloat();
+    char inByte = Serial.read();
 
-    if (Serial.read() == '\n') {
+     switch (inByte) {
 
-      switch (Command) {
-
-      case 1:
-        programSelected = (int) Value;
-        Serial.print("start program ");
-        Serial.println(programSelected);
-        break;
-      case 2:
-        Serial.println(resultTemp);
-        Serial.println(targetTemperature);
-        break;
-      case 3:
-        Serial.println("TSREADY");
-        delay(10000);
-        processSyncMessage();
-        Serial.print("time synced to ");
-        Serial.print(day());
-        Serial.print(".");
-        Serial.print(month());
-        Serial.print(".");
-        Serial.print(year());
-        Serial.print(" ");
-        Serial.print(hour());
-        Serial.print(":");
-        Serial.print(minute());
-        Serial.print(":"); 
-        Serial.print(second());
-        Serial.print("  "); 
-        Serial.println(now());
-        Serial.print("  "); 
-        Serial.println(Value);
-        break;
-      case 4:
-        if (serialProtocoll)
-          serialProtocoll = false;
-        else
-          serialProtocoll = true;
-        break;  
-      }  
+     case 'P':
+       //programSelected = (int) Value;
+       Serial.print("start program ");
+       Serial.println(programSelected);
+       break;
+     case 't':
+       Serial.print("T");
+       Serial.print(now());
+       Serial.print(",");
+       Serial.print(resultTemp);
+       Serial.print(",");
+       Serial.print(targetTemperature);
+       Serial.print(",");
+       Serial.print(heatingStatus);
+       Serial.print(",");
+       Serial.print(programSelected + "\n");
+       break;
+     case 'S':
+       Serial.println("TSREADY");
+       delay(10000);
+       processSyncMessage();
+       Serial.print("time synced to ");
+       Serial.print(day());
+       Serial.print(".");
+       Serial.print(month());
+       Serial.print(".");
+       Serial.print(year());
+       Serial.print(" ");
+       Serial.print(hour());
+       Serial.print(":");
+       Serial.print(minute());
+       Serial.print(":"); 
+       Serial.print(second());
+       Serial.print("  "); 
+       Serial.println(now());
+       Serial.print("  "); 
+       //Serial.println(Value);
+       break;
+     case 'p':
+       if (serialProtocoll)
+         serialProtocoll = false;
+       else
+         serialProtocoll = true;
+       break;  
+        
     }   
   }
 } 
