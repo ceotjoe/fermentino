@@ -112,8 +112,8 @@ String programShortName [10] = {
   "Aufh","Kl3St","De3St","De1St","Po3St"};
 int programSteps [10] = {
   1,3,3,1,3};
-//int programDuration [10] [3] = {{40 * 60}, {8 * 3600, 8 * 3600, 4 * 3600}, {8 * 3600, 8 * 3600, 4 * 3600}, {4 * 3600}, {8 * 3600, 8 * 3600, 4 * 3600}};
-int programDuration [10] [3] = {
+int programDuration [10] [3] = {{40 * 60}, {6 * 3600, 8 * 3600, 4 * 3600}, {8 * 3600, 8 * 3600, 4 * 3600}, {4 * 3600}, {8 * 3600, 8 * 3600, 4 * 3600}};
+/*int programDuration [10] [3] = {
   {
     14  }
   , {
@@ -124,7 +124,7 @@ int programDuration [10] [3] = {
     15  }
   , {
     11, 6, 4  }
-};
+};*/
 int programTemperatureHigh [10] [3] = {
   {
     30  }
