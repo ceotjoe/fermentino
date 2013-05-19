@@ -59,8 +59,8 @@ LiquidCrystal lcd(RS, E, D4, D5, D6, D7);
 #define downbuttonPin 8
 #define heatingPin 6
 #define piezoPin 13
-#define toneDuration 500
-#define tonePause 800
+#define toneDuration 400
+#define tonePause 600
 #define DELAY 10
 
 #define UP 1
@@ -105,55 +105,46 @@ int operatingMode = 0; // 0 = Leerlauf; 1 = manuelle Temperatur; 2 = program
 //String operatingModeText [3] = {"STBY", "MATP", "PROG"};
 
 //gaerbox Sauerteig Programme
-const int maxPrograms = 4;
+const int maxPrograms = 5;
 String programName [10] = {
-  "Aufheizen","Klassisch3St","Detmolder3St","Detmolder1St","Poelt3St"};
+  "Aufheizen","Klassisch3St","Detmolder3St","Detmolder2St","Detmolder1St","Poelt3St"};
 String programShortName [10] = {
-  "Aufh","Kl3St","De3St","De1St","Po3St"};
-int programSteps [10] = {
-  1,3,3,1,3};
-int programDuration [10] [3] = {{40 * 60}, {6 * 3600, 8 * 3600, 4 * 3600}, {8 * 3600, 8 * 3600, 4 * 3600}, {4 * 3600}, {8 * 3600, 8 * 3600, 4 * 3600}};
-/*int programDuration [10] [3] = {
-  {
-    14  }
-  , {
-    8, 8, 4  }
-  , {
-    10, 5, 3  }
-  , {
-    15  }
-  , {
-    11, 6, 4  }
-};*/
+  "Aufh","Kl3St","De3St","De2St","De1St","Po3St"};
+int programSteps [10] = {1,3,3,2,1,3};
+int programDuration [10] [3] = {{40 * 60}, {7 * 3600, 8 * 3600, 4 * 3600}, {6 * 3600, 16 * 3600, 3 * 3600}, {17 * 3600, 3 * 3600}, {17 * 3600}, {7 * 3600, 7 * 3600, 4 * 3600}};
 int programTemperatureHigh [10] [3] = {
   {
     30  }
   , {
-    30,26,22  }
+    24,27,30  }
   , {
-    30,26,22  }
+    26,30,28  }
   , {
-    30,26,22  }
+    25,28 }
   , {
-    28  }
+    26  }
   , {
-    30,26,22  }
+    27,25,20  }
 };
 int programTemperatureLOW [10] [3] =  {
   {
     30  }
   , {
-    30,26,22  }
+    24,27,30  }
   , {
-    30,26,22  }
+    26,30,28  }
   , {
-    30,26,22  }
+    25,28 }
   , {
     28  }
   , {
-    30,26,22  }
+    27,25,20  }
 };
 int programSelected = 999; //start with program 999 stby
+
+//Display lines
+String displayLineOne;
+String displayLineTwo;
 
 void setup(){
   noTone(piezoPin);
@@ -162,7 +153,7 @@ void setup(){
   pinMode(okbuttonPin, INPUT);
   pinMode(heatingPin, OUTPUT);
   timerStatus = LOW;
-  Serial.begin(9600);
+  Serial.begin(57600);
   lcd.begin(COLS,ROWS);
   lcd.print(Version);
   lcd.setCursor(0,1);
@@ -250,6 +241,7 @@ void workProgram(int programSelected){
 
     } 
     while (targetTime>now());
+    playSound();
 
   }
 
@@ -267,20 +259,20 @@ float getTempDS(){
 
 
 //get temperature from analog pin 0
-float getTemp(){
-
-  float resultTemp = 0.0;
-  for(int i = 0; i < cycles; i++){
-    int analogValue = analogRead(sensorPin);
-    float temperature = (5.0 * 100.0 * analogValue) / 1024;
-    resultTemp += temperature;
-    delay(DELAY);
-  }
-  //average temp
-  resultTemp /= cycles;
-  getTempDelay = now() + TEMPDELAY;
-  return resultTemp;
-}
+//float getTemp(){
+//
+//  float resultTemp = 0.0;
+//  for(int i = 0; i < cycles; i++){
+//    int analogValue = analogRead(sensorPin);
+//    float temperature = (5.0 * 100.0 * analogValue) / 1024;
+//    resultTemp += temperature;
+//    delay(DELAY);
+//  }
+//  //average temp
+//  resultTemp /= cycles;
+//  getTempDelay = now() + TEMPDELAY;
+//  return resultTemp;
+//}
 
 //switch heating on and off depending on targetTemperature
 int switchHeating(float resultTemp, int targetTemperature){
@@ -326,62 +318,50 @@ int checkButtons(){
 
 }
 
+
 //update LCD display and serial output
 void updateDisplay(int intresultTemp, int targetTemperature, int heatingStatus, time_t targetTime, int timerStatus, String programName){
   time_t Timer;
 
   //Current temperature
-  lcd.setCursor(0, 0);
-  lcd.print("C:");
-  lcd.print(intresultTemp);
-#if ARDUINO < 100
-  lcd.print(0xD0 + 15, BYTE);
-#else
-  lcd.write(0xD0 + 15);
-#endif
-  lcd.print("C ");
-
-  //targetTemperature
-  lcd.print("T:");
-  lcd.print(targetTemperature);
-#if ARDUINO < 100
-  lcd.print(0xD0 + 15, BYTE);
-#else
-  lcd.write(0xD0 + 15);
-#endif
-  lcd.print("C");
-
-  lcd.setCursor(15, 0);
+  displayLineOne = "C:" + (String) intresultTemp + " C  T:" + (String) targetTemperature + " C ";
   if (heatingStatus==HIGH)
-    lcd.print("H");
+    displayLineOne = displayLineOne + "H";
   else
-    lcd.print(" ");
+    displayLineOne = displayLineOne + " ";
 
   Timer = targetTime - now(); 
 
-  lcd.setCursor(0, 1);
-  lcd.print("T:");
+  displayLineTwo = "T:";
 
   if (timerStatus==HIGH){
     if (hour(Timer)<10)
-      lcd.print("0");
-    lcd.print(hour(Timer));
-    lcd.print(":");
+      displayLineTwo = displayLineTwo + "0";
+    displayLineTwo = displayLineTwo + hour(Timer) + ":";
     if (minute(Timer)<10)
-      lcd.print("0");
-    lcd.print(minute(Timer));
-    lcd.print(":");
+      displayLineTwo = displayLineTwo + "0";
+    displayLineTwo = displayLineTwo + minute(Timer) + ":";
     if (second(Timer)<10)
-      lcd.print("0");
-    lcd.print(second(Timer));
+      displayLineTwo = displayLineTwo + "0";
+    displayLineTwo = displayLineTwo + second(Timer);
   }
   else
   {
-    lcd.print ("00:00:00");
+    displayLineTwo = displayLineTwo + "00:00:00";
   }
 
-  lcd.print("  ");
-  lcd.print(programName);
+  displayLineTwo = displayLineTwo + "  " + programName;
+  
+  lcd.setCursor(0,0);
+  lcd.print(displayLineOne);
+  lcd.setCursor(0,1);
+  lcd.print(displayLineTwo);
+  
+  //workaround to print degree char
+  lcd.setCursor(4,0);
+  lcd.write(0xD0 + 15);
+  lcd.setCursor(12,0);
+  lcd.write(0xD0 + 15);
 
   //serial protocoll
   if ((serialProtocoll) && (now()>=serialDelay)) {
@@ -408,13 +388,16 @@ void selectProgram(){
     programSelected=0;
 
   lcd.clear();
-  lcd.print("Programmwahl:");
+  displayLineOne = "Programmwahl:";
+  lcd.print(displayLineOne);
   lcd.setCursor(0,1);
-  lcd.print(programName [programSelected]);
+  displayLineTwo = programName [programSelected];
+  lcd.print(displayLineTwo);
 
   do
   {
-    delay(250);
+    delay(200);
+    checkSerial();
     buttonPressed = checkButtons();
 
     switch (buttonPressed) {
@@ -422,14 +405,16 @@ void selectProgram(){
       if (programSelected < maxPrograms){
         programSelected++;
         lcd.setCursor(0,1);
-        lcd.print(programName [programSelected]);
+        displayLineTwo = programName [programSelected] + "     ";
+        lcd.print(displayLineTwo);
       }
       break;
     case DOWN:
       if (programSelected>0){
         programSelected--;
         lcd.setCursor(0,1);
-        lcd.print(programName [programSelected]);
+        displayLineTwo = programName [programSelected] + "     ";
+        lcd.print(displayLineTwo);
       }
       break;
     case NULL:
@@ -448,50 +433,55 @@ void checkSerial(){
 
   while (Serial.available()>0) {
 
-    int Command = Serial.parseInt();
-    int Value = Serial.parseFloat();
+    char inByte = Serial.read();
 
-    if (Serial.read() == '\n') {
+     switch (inByte) {
 
-      switch (Command) {
-
-      case 1:
-        programSelected = (int) Value;
-        Serial.print("start program ");
-        Serial.println(programSelected);
-        break;
-      case 2:
-        Serial.println(resultTemp);
-        Serial.println(targetTemperature);
-        break;
-      case 3:
-        Serial.println("TSREADY");
-        delay(10000);
-        processSyncMessage();
-        Serial.print("time synced to ");
-        Serial.print(day());
-        Serial.print(".");
-        Serial.print(month());
-        Serial.print(".");
-        Serial.print(year());
-        Serial.print(" ");
-        Serial.print(hour());
-        Serial.print(":");
-        Serial.print(minute());
-        Serial.print(":"); 
-        Serial.print(second());
-        Serial.print("  "); 
-        Serial.println(now());
-        Serial.print("  "); 
-        Serial.println(Value);
-        break;
-      case 4:
-        if (serialProtocoll)
-          serialProtocoll = false;
-        else
-          serialProtocoll = true;
-        break;  
-      }  
+     case 'P':
+       //programSelected = (int) Value;
+       Serial.print("start program ");
+       Serial.println(programSelected);
+       break;
+     case 't':
+       Serial.print("T");
+       Serial.print(now());
+       Serial.print(",");
+       Serial.print(resultTemp);
+       Serial.print(",");
+       Serial.print(targetTemperature);
+       Serial.print(",");
+       Serial.print(heatingStatus);
+       Serial.print(",");
+       Serial.print((String) programSelected + "\n");
+       break;
+     case 'S':
+       processSyncMessage();
+       lcd.clear();
+       lcd.print("Time set to:");
+       lcd.setCursor(0,1);
+       if (hour(now())<10)
+          lcd.print("0");
+       lcd.print(hour(now()));
+       lcd.print(":");
+       if (minute(now())<10)
+         lcd.print("0");
+       lcd.print(minute(now()));
+       lcd.print(":");
+       if (second(now())<10)
+         lcd.print("0");
+       lcd.print(second(now()));
+       delay(3000); 
+       break;
+     case 'p':
+       if (serialProtocoll)
+         serialProtocoll = false;
+       else
+         serialProtocoll = true;
+       break;
+     case 'l':
+       Serial.println("L" + displayLineOne + ";" + displayLineTwo);
+       break;  
+        
     }   
   }
 } 
@@ -500,7 +490,7 @@ void processSyncMessage() {
   // if time sync available from serial port, update time and return true
   while(Serial.available() >=  TIME_MSG_LEN ){  // time message consists of header & 10 ASCII digits
     char c = Serial.read() ; 
-    Serial.print(c);  
+    //Serial.print(c);  
     if( c == TIME_HEADER ) {       
       time_t pctime = 0;
       for(int i=0; i < TIME_MSG_LEN -1; i++){   
@@ -521,6 +511,7 @@ void playSound(){
   for(int i = 0; i < elements; i++) {
     tone(piezoPin, tones[i], toneDuration);
     delay(tonePause);
+    checkSerial();
   }
 }
 
