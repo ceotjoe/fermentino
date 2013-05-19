@@ -49,6 +49,7 @@
     	// decrement month by one cause JavaScript starts month with 0
     	$month = (int)$dt->format('n');
     	$month = $month - 1;
+    	
     	$datestring = "Date(" . $dt->format('Y') . ',' . $month . ',' . $dt->format('j,G,i,s') . ")";
 		$temp[] = array('v' => $datestring);
 		$temp[] = array('v' => $r['tp_TargetTemp']);

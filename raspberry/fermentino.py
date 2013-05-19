@@ -12,7 +12,7 @@ import socket
 import os
 from configobj import ConfigObj
 
-config = ConfigObj('/home/pi/fermentino/settings/config.cfg')
+config = ConfigObj('/home/fermentino/settings/config.cfg')
 
 con = None
 
@@ -38,7 +38,7 @@ except mdb.Error, e:
     
 try:
 
-	ser = serial.Serial(config['port'], 57600, timeout=1)
+	ser = serial.Serial(config['port'], 9600, timeout=1)
 
 except serial.SerialException, e:
 	print e
@@ -62,12 +62,14 @@ ser.flush()
 #set Arduino time
 ser.write("ST%10.0f" % time.time())
 print "Time sync message: ST%10.0f" % time.time()
-time.sleep(3)
+time.sleep(1)
 
 prevDataTime = 0.0  # keep track of time between new data requests
 prevTimeOut = time.time()
 
 run = 1
+
+lcdText = ""
 
 while(run):
 
@@ -82,6 +84,9 @@ while(run):
 			
 		if messageType == "stopScript":
 			run = 0
+			dontrunfile = open(config['wwwPath'] + 'do_not_run_fermentino', "w")
+			dontrunfile.write("1")
+			dontrunfile.close()
 			continue
 			
 		elif messageType == "ack":  # acknowledge request
@@ -132,11 +137,12 @@ while(run):
 						cur = con.cursor()
 						cur.execute(sql)
 						con.commit()
-					
+						
 					elif(line[0] == 'L'):
 						# lcd content received
 						lcdText = line[1:]
-						
+						print lcdText
+		
 				except mdb.Error, e:
 		
 					print "Error %d: %s" % (e.args[0],e.args[1])
