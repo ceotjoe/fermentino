@@ -38,7 +38,7 @@ except mdb.Error, e:
     
 try:
 
-	ser = serial.Serial(config['port'], 9600, timeout=1)
+	ser = serial.Serial(config['port'], 57600, timeout=1)
 
 except serial.SerialException, e:
 	print e
@@ -86,6 +86,9 @@ while(run):
 			
 		elif messageType == "ack":  # acknowledge request
 			conn.send('ack')
+			
+		elif messageType == "lcd":  # lcd contents requested
+			conn.send(lcdText)
 		
 		if (time.time() - prevTimeOut) < config['serialCheckInterval']:
 			continue
@@ -96,6 +99,10 @@ while(run):
 	except socket.timeout:
 		# Do serial communication and update settings every SerialCheckInterval
 		prevTimeOut = time.time()
+		
+		#request LCD text
+		ser.write('l')
+		time.sleep(1)
 		
 		# if no new data has been received for serialRequestInteval seconds
 		if((time.time() - prevDataTime) >= float(config['interval'])):
@@ -125,7 +132,11 @@ while(run):
 						cur = con.cursor()
 						cur.execute(sql)
 						con.commit()
-		
+					
+					elif(line[0] == 'L'):
+						# lcd content received
+						lcdText = line[1:]
+						
 				except mdb.Error, e:
 		
 					print "Error %d: %s" % (e.args[0],e.args[1])
