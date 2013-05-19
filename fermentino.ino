@@ -105,53 +105,41 @@ int operatingMode = 0; // 0 = Leerlauf; 1 = manuelle Temperatur; 2 = program
 //String operatingModeText [3] = {"STBY", "MATP", "PROG"};
 
 //gaerbox Sauerteig Programme
-const int maxPrograms = 4;
+const int maxPrograms = 5;
 String programName [10] = {
-  "Aufheizen","Klassisch3St","Detmolder3St","Detmolder1St","Poelt3St"};
+  "Aufheizen","Klassisch3St","Detmolder3St","Detmolder2St","Detmolder1St","Poelt3St"};
 String programShortName [10] = {
-  "Aufh","Kl3St","De3St","De1St","Po3St"};
+  "Aufh","Kl3St","De3St","De2St","De1St","Po3St"};
 int programSteps [10] = {
-  1,3,3,1,3};
-int programDuration [10] [3] = {{40 * 60}, {6 * 3600, 8 * 3600, 4 * 3600}, {8 * 3600, 8 * 3600, 4 * 3600}, {4 * 3600}, {8 * 3600, 8 * 3600, 4 * 3600}};
-//int programDuration [10] [3] = {
-//  {
-//    14  }
-//  , {
-//    8, 8, 4  }
-//  , {
-//    10, 5, 3  }
-//  , {
-//    15  }
-//  , {
-//    11, 6, 4  }
-//};
+  1,3,3,2,1,3};
+int programDuration [10] [3] = {{40 * 60}, {7 * 3600, 8 * 3600, 4 * 3600}, {6 * 3600, 16 * 3600, 3 * 3600}, {17 * 3600, 3 * 3600}, {17 * 3600}, {7 * 3600, 7 * 3600, 4 * 3600}};
 int programTemperatureHigh [10] [3] = {
   {
     30  }
   , {
-    30,26,22  }
+    24,27,30  }
   , {
-    30,26,22  }
+    26,30,28  }
   , {
-    30,26,22  }
+    25,28 }
   , {
-    28  }
+    26  }
   , {
-    30,26,22  }
+    27,25,20  }
 };
 int programTemperatureLOW [10] [3] =  {
   {
     30  }
   , {
-    30,26,22  }
+    24,27,30  }
   , {
-    30,26,22  }
+    26,30,28  }
   , {
-    30,26,22  }
+    25,28 }
   , {
     28  }
   , {
-    30,26,22  }
+    27,25,20  }
 };
 int programSelected = 999; //start with program 999 stby
 
